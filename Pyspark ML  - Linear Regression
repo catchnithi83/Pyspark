@@ -1,0 +1,82 @@
+# Pyspark ML  - Linear Regression
+Sparkdemo=SparkSession.builder.appName('imputation').getOrCreate()
+Sparkdemo=SparkSession.builder.appName('imputation').getOrCreate()
+csv
+## Read The dataset
+training = Sparkdemo.read.csv('D:\\Personal\\Spark\\Spark_programs\\Programs\\Impuration_ML_Demo.csv',header=True,inferSchema=True)
+training.show()
++-------+---+----------+------+
+|   Name|age|Experience|Salary|
++-------+---+----------+------+
+|Person1| 51|        10| 30000|
+|Person2| 40|         8| 25000|
+|Person3| 39|         4| 20000|
+|Person4| 34|         3| 20000|
+|Person5| 31|         1| 15000|
+|Person6| 33|         2| 18000|
++-------+---+----------+------+
+
+training.printSchema()
+​
+root
+ |-- Name: string (nullable = true)
+ |-- age: integer (nullable = true)
+ |-- Experience: integer (nullable = true)
+ |-- Salary: integer (nullable = true)
+
+from pyspark.ml.feature import VectorAssembler
+featureassembler=VectorAssembler(inputCols=["age","Experience"],outputCol="New Features")
+output=featureassembler.transform(training)
+​
+output.show()
+​
++-------+---+----------+------+------------+
+|   Name|age|Experience|Salary|New Features|
++-------+---+----------+------+------------+
+|Person1| 51|        10| 30000| [51.0,10.0]|
+|Person2| 40|         8| 25000|  [40.0,8.0]|
+|Person3| 39|         4| 20000|  [39.0,4.0]|
+|Person4| 34|         3| 20000|  [34.0,3.0]|
+|Person5| 31|         1| 15000|  [31.0,1.0]|
+|Person6| 33|         2| 18000|  [33.0,2.0]|
++-------+---+----------+------+------------+
+
+dataput
+dataput=output.select("New Features","Salary")
+​
+dataput
+dataput.show()
+​
++------------+------+
+|New Features|Salary|
++------------+------+
+| [51.0,10.0]| 30000|
+|  [40.0,8.0]| 25000|
+|  [39.0,4.0]| 20000|
+|  [34.0,3.0]| 20000|
+|  [31.0,1.0]| 15000|
+|  [33.0,2.0]| 18000|
++------------+------+
+
+from pyspark.ml.regression import LinearRegression
+##train test split function
+train_data,test_data=dataput.randomSplit([0.80,0.20])
+regressor=LinearRegression(featuresCol='New Features', labelCol='Salary')
+regressor=regressor.fit(train_data)
+### Coefficients
+regressor.coefficients
+DenseVector([2666.6667, -2000.0])
+### Intercepts
+regressor.intercept
+-65500.00000025033
+result
+### Prediction
+result=regressor.evaluate(test_data)
+result.predictions.show()
+​
++------------+------+------------------+
+|New Features|Salary|        prediction|
++------------+------+------------------+
+|  [39.0,4.0]| 20000|30500.000000032196|
+| [51.0,10.0]| 30000| 50500.00000006999|
++------------+------+------------------+
